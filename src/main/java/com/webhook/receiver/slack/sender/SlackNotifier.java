@@ -72,7 +72,7 @@ public class SlackNotifier implements Notifier {
             slackAttachment.setTitle_link(pinpointLink);
         }
 
-        Field checkerNameField = new Field("알람 유형", webhookPayload.getChecker().getName());
+        Field checkerNameField = new Field("알림 유형", webhookPayload.getChecker().getName());
         Field applicationIdField = new Field("애플리케이션", webhookPayload.getApplicationId());
         Field serviceTypeField = new Field("서비스 타입", webhookPayload.getServiceType());
         Field sequenceCountField = new Field("연속 감지 횟수", webhookPayload.getSequenceCount().toString());
@@ -121,7 +121,7 @@ public class SlackNotifier implements Notifier {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
         String from = now.minusMinutes(5).format(fmt);
-        String to = now.format(fmt);
+        String to = now.plusMinutes(3).format(fmt);
 
         if (checkerName.contains("ERROR") || checkerName.contains("DEADLOCK")) {
             return baseUrl + "/errorAnalysis/" + appTarget + "?from=" + from + "&to=" + to;
