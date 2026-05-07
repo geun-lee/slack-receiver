@@ -24,35 +24,51 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SlackNotifierTest {
-    
-    @InjectMocks
-    SlackNotifier slackNotifier;
-    
+
     @Mock
     RestTemplate restTemplate;
-    
-    @BeforeAll
-    static void beforeAll() {
-    }
-    
+
+    private SlackNotifier slackNotifier;
+
     @Test
-    void sendFailWhenRestClientException() {
-        lenient().when(restTemplate.postForObject(any(URI.class), any(SlackPayload.class), eq(String.class))).thenThrow(RestClientException.class);
-        
-        slackNotifier = new SlackNotifier(restTemplate, "http://webhook.url.com");
-    
-        WebhookPayload payload = new WebhookPayload("pinpointUrl", "release", "applicationId", "serviceType", new UserGroup("userGroupId", new ArrayList<>()), new LongValueAlarmChecker(1L), "%", 1, "", 1);
-        
+    void sendFailWhenApplicationIdNotConfigured() {
+        slackNotifier = new SlackNotifier(restTemplate, "http://webhook.kics-prod.com", "", "", "", "");
+
+        WebhookPayload payload = new WebhookPayload("pinpointUrl", "release", "unknown-app", "serviceType", new UserGroup("userGroupId", new ArrayList<>()), new LongValueAlarmChecker(1L), "%", 1, "", 1);
+
         boolean result = slackNotifier.send(payload);
         Assertions.assertFalse(result);
     }
-    
+
+    @Test
+    void sendFailWhenRestClientException() {
+        lenient().when(restTemplate.postForObject(any(URI.class), any(SlackPayload.class), eq(String.class))).thenThrow(RestClientException.class);
+
+        slackNotifier = new SlackNotifier(restTemplate, "http://webhook.kics-prod.com", "", "", "", "");
+
+        WebhookPayload payload = new WebhookPayload("pinpointUrl", "release", "kics-prod", "serviceType", new UserGroup("userGroupId", new ArrayList<>()), new LongValueAlarmChecker(1L), "%", 1, "", 1);
+
+        boolean result = slackNotifier.send(payload);
+        Assertions.assertFalse(result);
+    }
+
     @Test
     void sendSuccess() {
         when(restTemplate.postForObject(any(URI.class), any(SlackPayload.class), eq(String.class))).thenReturn("");
-        slackNotifier = new SlackNotifier(restTemplate, "http://webhook.send.com");
-    
-        WebhookPayload payload = new WebhookPayload("pinpointUrl", "release", "applicationId", "serviceType", new UserGroup("userGroupId", new ArrayList<>()), new LongValueAlarmChecker(1L), "%", 1, "", 1);
+        slackNotifier = new SlackNotifier(restTemplate, "http://webhook.kics-prod.com", "http://webhook.api-hub-prd.com", "http://webhook.result-hub-prod.com", "", "");
+
+        WebhookPayload payload = new WebhookPayload("pinpointUrl", "release", "kics-prod", "serviceType", new UserGroup("userGroupId", new ArrayList<>()), new LongValueAlarmChecker(1L), "%", 1, "", 1);
+
+        boolean result = slackNotifier.send(payload);
+        Assertions.assertTrue(result);
+    }
+
+    @Test
+    void sendSuccessWithMultipleApplicationIds() {
+        when(restTemplate.postForObject(any(URI.class), any(SlackPayload.class), eq(String.class))).thenReturn("");
+        slackNotifier = new SlackNotifier(restTemplate, "http://webhook.kics-prod.com", "http://webhook.api-hub-prd.com", "http://webhook.result-hub-prod.com", "", "");
+
+        WebhookPayload payload = new WebhookPayload("pinpointUrl", "release", "api-hub-prd", "serviceType", new UserGroup("userGroupId", new ArrayList<>()), new LongValueAlarmChecker(1L), "%", 1, "", 1);
 
         boolean result = slackNotifier.send(payload);
         Assertions.assertTrue(result);

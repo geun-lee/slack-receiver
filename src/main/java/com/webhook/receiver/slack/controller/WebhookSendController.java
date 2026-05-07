@@ -2,6 +2,8 @@ package com.webhook.receiver.slack.controller;
 
 import com.webhook.receiver.slack.sender.Notifier;
 import com.webhook.receiver.slack.vo.WebhookPayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,15 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/send")
 public class WebhookSendController {
-    
+
+    private final Logger logger = LoggerFactory.getLogger(WebhookSendController.class);
     private final Notifier slackNotifier;
-    
+
     public WebhookSendController(Notifier slackNotifier) {
         this.slackNotifier = slackNotifier;
     }
-    
+
     @RequestMapping(value = "/slack", method = RequestMethod.POST)
     public ResponseEntity<Void> sendWebhook(@RequestBody WebhookPayload webhookPayload) {
+        logger.info("Received webhook payload: {}", webhookPayload);
         if(slackNotifier.send(webhookPayload)) {
             return new ResponseEntity<>(HttpStatus.OK);
         }
